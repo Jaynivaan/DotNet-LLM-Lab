@@ -1,0 +1,22 @@
+##virtualEnvironment
+.venv/
+
+##python
+__pycache__/
+*.pyc
+
+##Models
+models/
+
+##Training
+checkpoints/
+exports/
+
+##vs
+.vscode/
+.vs/
+bin/
+obj/
+
+#python caches
+.pytest_cache/
