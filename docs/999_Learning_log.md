@@ -215,3 +215,237 @@ Embeddings => Head1 ->context vector 1 =>Head2 -> context vector 2 => Head3 -> c
 ```
 
 ==============================================================================================================================
+# Lesson: 09 Positional Encoding
+
+###Objective:
+understand why positional information is added to embeddings
+and how it help a transformer understand the order of words.
+
+
+##What i learned
+---
+
+- Transformers process all tokens at the same time, so they donot naturally know the order of words.
+- Positional encoding gives each token information about its  relative positioning with in the sentence.
+- a position vector is added to each embedding to weave a position aware embedding.
+- The same word appearing in different positions will have different final embedding ..
+- This address awareness help transformer to distinguish between sentences that contain the same words but different order.
+
+---
+
+#codedecodeing
+-----
+
+create random embedding vectors
+`size (5, 5)`
+- ** 5 rows** one embedding for each of five words.
+- ** columns** Each embedding or row hold five numerical features( embedding dimensions)
+
+```python
+embeddings = torch.rand(size=(5,5))
+```
+---
+
+creating the position number for each word / token id
+- `end=5` ie , generates positions **0, 1, 2, 3, 4**.
+- `unsqueeze(dim=1)` ie, adds a column dimentions so each position becomes its own separate row.
+- `float()` ie, convert values to floating point numbers so they can be  added to the embeddings.
+
+```python
+positions = torch.arange(5).unsqueeze(1).float()
+```
+
+---
+
+
+Creating a position vector for every word
+
+- `repeat (1, embeddings.shape[1])` ie, `1` -> do not repeat rows; `embeddings.shape[1]` -> Repeat each position across all embedding dimensions(here we configured for dim =5 for each token)
+- `0.1` scales the position values to keep them small compared to embedding values.
+
+```python
+position_vectors = positions.repeat(1, embeddings.shape[1]) * 0.1
+```
+
+---
+
+add the position vector embeddings to finally producing position aware embeddings.
+by binding both together.
+
+```python
+final_embeddings = embeddings + position_vectors
+```
+
+##Data flow
+---
+
+```
+original embeddings => position vectors => add both => final embeddings
+
+```
+
+=====================================================================================================================================
+
+#Lesson 10 Query, Key and Value
+
+### Objectives
+understand how a transformer converts embeddings into **Query(Q)**, **key(K)** and **Value(V)** vectors before calculating attention.
+
+
+##What i learned..
+---
+
+- Every token starts as an embedding
+- The transformer  creates  three new vectors from each embedding.
+		- Query= What information is this token looking for?
+		- Key=What information does this token offer?
+		- Value=The actual information that can be materialized from the token.
+- Q, K and V are created by multiplying the embeddings with different weight matrices.
+- Although they come from the same embedding, they serve diffeerent purposes during attention.
+
+---
+###codeDecodeing.
+---
+
+defining the size of each embedding vector
+`embedding_size=4 ` ie, each word represented by **4 numerical features**
+
+```python
+embedding_size = 4
+```
+---
+
+creating purely random embeddings for each words.
+	- `size = (len(words), embedding_size)`
+		- `len(words)`	->	one embedding for each word
+		- `embedding_size` -> number of dimensions for each embedding
+
+```python
+embeddings= torch.rand(size=(len(words), embedding_size))
+```
+---
+
+creating three different weight matrices
+
+- *** Query Weights*** -> produce query vectors
+- *** Key Weights*** -> produces key vectors
+- *** Value Weights*** -> produces Value vectors
+
+Each of these matrices learns a different transformation during training.
+
+```python
+query_weights = torch.rand( size = ( embedding_size, embedding_size))
+key_weights = torch.rand(size = ( embedding_size, embedding_size))
+value_weights = torch.rand(size = (embedding_size, embedding_size))
+```
+
+---
+
+Transforms the embeddings into ***Query Vectors****
+- `torch.matmul()`  ie matrix multiplication 
+- each embedding is multiplied by query weight matrix.
+
+```python
+queries = torch.matmul( embeddings, query_weights)
+```
+
+Transforms the embeddings into ***key Vectors****
+
+```python
+keys = torch.matmul( embeddings, key_weights)
+```
+Transforms the embeddings into ***Value Vectors****
+
+```python
+Value = torch.matmul( embeddings, Value_weights)
+```
+
+---
+
+##data flow
+
+```
+word/tokenid  => embeddings =>query_weights, key_weights, value_weights 
+```
+=====================================================================================================================================
+
+
+##Lesson 11: Attention Scores
+
+###Objectives;
+understand how  a transformer measures the relationship between  every pair of words using attention Scores.
+
+What i learned :::
+---
+- Every word has a Query vector and a Key vector
+- A query is compared with every key to measure similarity..
+- this similarity values are called attention scores
+- high attention scores show stronger relationship 
+- every word computes attention scores with every other words in the sequence..
+---
+
+#code decoding'
+---
+defining embedding size
+```python
+embedding_size = 4
+```
+
+creating embedding s for  each tokenid based on defined size which is 4.
+`size = (len(words), embedding_size)`
+`len(words)` means one embedding for each item in array words
+`embedding_size` means addeing the defined size ie, 4 here
+
+```
+embedding = torch.rand(size=(len(words), embedding_size))
+```
+
+---
+
+creating weight matrices used to generate  Query and Key vectors.
+- query weight for  transforming embeddings to query vectors.
+- key weights for transforming embeddings to key vectors
+
+```python
+query_weights = torch.rand(size=(embedidng_size, embedding_size))
+key_weights= torch.rand(size=(embedding_size, embedding_size))
+```
+--
+Generating the query vector
+
+- `@` matrix multiplication
+- every embedding dimension s are multiplied by query weight matrix
+
+```python
+queries = embeddings @ query_weights
+```
+
+Generating the key vector
+
+```python
+key = embeddings @ key_weights
+```
+
+---
+
+calculating attentionscores
+
+- `queries` represent what each word is searching for..
+- `keys.T` transposes the key matrix so that  every query can be compared to every key.
+- `@` computes similarity between all query-key pairs
+- result will be an attention score matrix..
+
+```python
+attention_scores = queries @ keys.T
+```
+---
+
+
+###
+data flow
+
+```
+embeddings => query weights, key weights => queries, keys  => comparing queries and keys => AttentionSCORE matrix
+```
+======================================================================================
+
