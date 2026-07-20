@@ -86,7 +86,7 @@ class FeedForwardNetwork(nn.Module):
             #instead on Just ReLU; GELU, SiLU or SwiGLU can be used..
             #the models like Qwen and Llama use gated Feed-forward method.
 
-    def forward(self, embedding_size: torch.Tensor) -> torch.Tensor:
+    def forward(self, embeddings: torch.Tensor) -> torch.Tensor:
         return self.network(embeddings)
     
 class TransformerBlock(nn.Module):
